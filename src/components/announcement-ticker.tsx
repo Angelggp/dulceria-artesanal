@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Banner } from "@/lib/types";
 
 const COLOR_CLASSES: Record<string, { bg: string; text: string; separator: string }> = {
@@ -16,9 +16,15 @@ function getColors(color: string) {
   return COLOR_CLASSES[color] ?? COLOR_CLASSES.amber;
 }
 
+// Repeticiones por copia — garantiza que UNA copia siempre sea más ancha
+// que cualquier pantalla (móvil/tablet/desktop) aunque el texto sea corto.
+const REPS = 6;
+
 export default function AnnouncementTicker() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const firstCopyRef = useRef<HTMLSpanElement>(null);
+  const [tickerOffset, setTickerOffset] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/banner")
@@ -30,27 +36,38 @@ export default function AnnouncementTicker() {
       .catch(() => setLoaded(true));
   }, []);
 
+  // Medir el ancho REAL de la primera copia tras render + fuentes
+  useEffect(() => {
+    if (!loaded || banners.length === 0) return;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        if (firstCopyRef.current) {
+          setTickerOffset(`-${firstCopyRef.current.offsetWidth}px`);
+        }
+      }),
+    );
+  }, [banners, loaded]);
+
   if (!loaded || banners.length === 0) return null;
 
   const primaryColor = banners[0]?.color ?? "amber";
   const { bg, text, separator } = getColors(primaryColor);
 
-  // Cada item lleva separador al final — incluido el último — para que al
-  // repetir, el final de la copia A fluya sin interrupción al inicio de la copia B.
-  const items = banners.map((banner) => (
-    <span key={banner.id} className="inline-flex items-center shrink-0">
-      <span className="px-2">{banner.text}</span>
-      <span className={`mx-6 text-base font-bold ${separator}`} aria-hidden>✦</span>
-    </span>
-  ));
-
-  // Copia B con keys distintos — mismo contenido, necesario para el loop sin salto.
-  const itemsCopy = banners.map((banner) => (
-    <span key={`copy-${banner.id}`} className="inline-flex items-center shrink-0" aria-hidden>
-      <span className="px-2">{banner.text}</span>
-      <span className={`mx-6 text-base font-bold ${separator}`} aria-hidden>✦</span>
-    </span>
-  ));
+  // Una copia = REPS repeticiones del contenido.
+  // Con REPS=6, aunque el texto mida 50px, una copia = 300px+ → siempre supera la pantalla.
+  const renderCopy = (prefix: string, hidden?: true) =>
+    Array.from({ length: REPS }, (_, rep) =>
+      banners.map((banner) => (
+        <span
+          key={`${prefix}-${rep}-${banner.id}`}
+          className="inline-flex items-center shrink-0"
+          aria-hidden={hidden}
+        >
+          <span className="px-3">{banner.text}</span>
+          <span className={`mx-5 font-bold ${separator}`} aria-hidden>✦</span>
+        </span>
+      )),
+    ).flat();
 
   return (
     <div
@@ -58,15 +75,29 @@ export default function AnnouncementTicker() {
       aria-label="Anuncios promocionales"
     >
       {/*
-        Dos copias aplanadas en el mismo flex container.
-        translateX(-50%) = exactamente el ancho de 1 copia → loop perfecto sin salto.
+        Layout: [copia A (REPS items)][copia B (REPS items)]
+        Animación: translateX(0) → translateX(-anchoA)
+        Al resetear, copia B quedó exactamente donde estaba copia A → sin salto.
+        Como anchoA > ancho de pantalla, el reset ocurre fuera del área visible.
       */}
       <div
         className="flex items-center whitespace-nowrap"
-        style={{ animation: "ticker-scroll 8s linear infinite", willChange: "transform" }}
+        style={
+          tickerOffset
+            ? ({
+                animation: "ticker-scroll 200s linear infinite",
+                "--ticker-offset": tickerOffset,
+                willChange: "transform",
+              } as React.CSSProperties)
+            : { visibility: "hidden" }
+        }
       >
-        {items}
-        {itemsCopy}
+        <span ref={firstCopyRef} className="inline-flex items-center shrink-0">
+          {renderCopy("a")}
+        </span>
+        <span className="inline-flex items-center shrink-0" aria-hidden>
+          {renderCopy("b", true)}
+        </span>
       </div>
     </div>
   );

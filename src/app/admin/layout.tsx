@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const currentLabel = NAV_ITEMS.find((n) => pathname.startsWith(n.href))?.label ?? "Admin";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-100">
+    <div className="flex h-screen overflow-hidden bg-amber-50">
       {/* ── Sidebar desktop (fija, colapsable) ── */}
       {/* Wrapper relativo para que el botón de colapso no quede recortado por overflow-hidden del aside */}
       <div className="relative hidden md:flex shrink-0">
@@ -164,7 +164,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* ── Área principal ── */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 bg-white px-4">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-amber-200 bg-white px-4">
           {/* Hamburger — solo mobile */}
           <button
             className="rounded-lg p-1.5 text-zinc-600 hover:bg-zinc-100 md:hidden"

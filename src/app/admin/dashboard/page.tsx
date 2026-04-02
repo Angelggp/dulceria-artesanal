@@ -82,7 +82,7 @@ function StatCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+    <div className="flex items-center gap-4 rounded-2xl border border-amber-100 bg-white p-4 shadow-sm">
       <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${color}`}>
         {icon}
       </div>
@@ -97,7 +97,7 @@ function StatCard({
 
 function SkeletonStatCard() {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm animate-pulse">
+    <div className="flex items-center gap-4 rounded-2xl border border-amber-100 bg-white p-4 shadow-sm animate-pulse">
       <div className="h-11 w-11 shrink-0 rounded-xl bg-zinc-200" />
       <div className="flex-1 space-y-2">
         <div className="h-3 w-24 rounded bg-zinc-200" />
@@ -185,8 +185,8 @@ export default function DashboardPage() {
   return (
     <section className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-zinc-800">Dashboard</h1>
-        <p className="text-sm text-zinc-500">Resumen de tu dulcería</p>
+        <h1 className="text-xl font-bold text-amber-900">Dashboard</h1>
+        <p className="text-sm text-amber-700/70">Resumen de tu dulcería</p>
       </div>
 
       {/* ── Métricas ── */}
@@ -286,14 +286,14 @@ export default function DashboardPage() {
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => <SkeletonOrderRow key={i} />)
           ) : latest.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-zinc-200 py-8 text-center">
-              <p className="text-sm text-zinc-400">No hay pedidos aún.</p>
+            <div className="rounded-2xl border border-dashed border-amber-200 py-8 text-center">
+              <p className="text-sm text-amber-400">No hay pedidos aún.</p>
             </div>
           ) : (
             latest.map((o) => (
               <div
                 key={o.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm"
+                className="flex items-center justify-between gap-3 rounded-xl border border-amber-100 bg-white px-4 py-3 shadow-sm"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-zinc-900">{o.customer_name}</p>
@@ -318,8 +318,8 @@ export default function DashboardPage() {
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => <SkeletonBar key={i} />)
           ) : totalActive === 0 ? (
-            <div className="rounded-2xl border border-dashed border-zinc-200 py-8 text-center">
-              <p className="text-sm text-zinc-400">Sin pedidos activos.</p>
+            <div className="rounded-2xl border border-dashed border-amber-200 py-8 text-center">
+              <p className="text-sm text-amber-400">Sin pedidos activos.</p>
             </div>
           ) : (
             (["pendiente", "en preparación", "listo"] as const).map((status) => {
