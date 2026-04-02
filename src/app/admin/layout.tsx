@@ -14,9 +14,11 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  LayoutDashboard,
 } from "lucide-react";
 
 const NAV_ITEMS = [
+  { href: "/admin/dashboard",  label: "Dashboard",  Icon: LayoutDashboard },
   { href: "/admin/pedidos",    label: "Pedidos",    Icon: ShoppingBag },
   { href: "/admin/productos",  label: "Productos",  Icon: LayoutGrid },
   { href: "/admin/categorias", label: "Categorías", Icon: Tag },
