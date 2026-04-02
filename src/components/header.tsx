@@ -42,7 +42,7 @@ export default function Header() {
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.5, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 500, damping: 24 }}
-                  className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-amber-800"
+                  className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-amber-800"
                 >
                   {totalItems > 9 ? "9+" : totalItems}
                 </motion.span>
