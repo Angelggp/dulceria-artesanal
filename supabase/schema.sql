@@ -43,7 +43,8 @@ create table if not exists public.orders (
   order_date date not null,
   status text not null default 'pendiente',
   total numeric(10, 2) not null check (total >= 0),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  archived boolean not null default false
 );
 
 create table if not exists public.order_items (
