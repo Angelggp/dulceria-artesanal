@@ -32,39 +32,41 @@ export default function AnnouncementTicker() {
 
   if (!loaded || banners.length === 0) return null;
 
-  // Usamos el color del primer banner activo (o el más reciente)
   const primaryColor = banners[0]?.color ?? "amber";
   const { bg, text, separator } = getColors(primaryColor);
 
-  // Repetimos el contenido dos veces para lograr el loop continuo sin saltos
-  const tickerContent = (
-    <>
-      {banners.map((banner, i) => (
-        <span key={banner.id} className="inline-flex items-center shrink-0">
-          <span>{banner.text}</span>
-          {i < banners.length - 1 && (
-            <span className={`mx-6 text-lg font-bold ${separator}`} aria-hidden>✦</span>
-          )}
-        </span>
-      ))}
-      {/* separador entre vuelta y vuelta */}
-      <span className={`mx-8 text-lg font-bold ${separator}`} aria-hidden>✦</span>
-    </>
-  );
+  // Cada item lleva separador al final — incluido el último — para que al
+  // repetir, el final de la copia A fluya sin interrupción al inicio de la copia B.
+  const items = banners.map((banner) => (
+    <span key={banner.id} className="inline-flex items-center shrink-0">
+      <span className="px-2">{banner.text}</span>
+      <span className={`mx-6 text-base font-bold ${separator}`} aria-hidden>✦</span>
+    </span>
+  ));
+
+  // Copia B con keys distintos — mismo contenido, necesario para el loop sin salto.
+  const itemsCopy = banners.map((banner) => (
+    <span key={`copy-${banner.id}`} className="inline-flex items-center shrink-0" aria-hidden>
+      <span className="px-2">{banner.text}</span>
+      <span className={`mx-6 text-base font-bold ${separator}`} aria-hidden>✦</span>
+    </span>
+  ));
 
   return (
     <div
       className={`${bg} ${text} overflow-hidden py-2 text-sm font-semibold tracking-wide select-none`}
       aria-label="Anuncios promocionales"
     >
-      {/* Animación marquee pura CSS — sin dependencias de librerías adicionales */}
+      {/*
+        Dos copias aplanadas en el mismo flex container.
+        translateX(-50%) = exactamente el ancho de 1 copia → loop perfecto sin salto.
+      */}
       <div
-        className="flex whitespace-nowrap"
-        style={{ animation: "ticker-scroll 28s linear infinite" }}
+        className="flex items-center whitespace-nowrap"
+        style={{ animation: "ticker-scroll 8s linear infinite", willChange: "transform" }}
       >
-        {/* duplicamos para loop sin salto visible */}
-        <span className="inline-flex items-center shrink-0 mr-8">{tickerContent}</span>
-        <span className="inline-flex items-center shrink-0 mr-8" aria-hidden>{tickerContent}</span>
+        {items}
+        {itemsCopy}
       </div>
     </div>
   );

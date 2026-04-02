@@ -8,7 +8,7 @@ import { useCartStore } from "@/store/cart-store";
 export default function Header() {
   const totalItems = useCartStore((state) => state.totalItems());
   return (
-    <header className="sticky top-0 z-10 border-b border-amber-200 bg-amber-50/95 backdrop-blur">
+    <header className="border-b border-amber-200 bg-amber-50/95 backdrop-blur">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link href="/" className="text-lg font-semibold text-amber-900">
           🍬 Dulcería Artesanal

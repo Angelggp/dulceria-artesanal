@@ -34,9 +34,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-amber-50 text-zinc-800">
-        <ConditionalHeader />
+        <div className="sticky top-0 z-50">
+          <ConditionalTicker />
+          <ConditionalHeader />
+        </div>
         <ConditionalMain>{children}</ConditionalMain>
-        <ConditionalTicker />
         <ConditionalFooter />
         <BottomNav />
         <ToastProvider />

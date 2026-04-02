@@ -140,16 +140,16 @@ export default function AnunciosPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-800">Anuncios</h1>
+          <h1 className="text-xl font-bold text-zinc-800 sm:text-2xl">Anuncios</h1>
           <p className="mt-0.5 text-sm text-zinc-500">
-            Gestiona el ticker promocional que aparece encima del pie de página.
+            Gestiona el ticker promocional que aparece encima del header.
           </p>
         </div>
         <button
           onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-500 active:scale-95"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-500 active:scale-95 sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           Nuevo anuncio
@@ -265,65 +265,57 @@ export default function AnunciosPage() {
           {banners.map((banner) => (
             <div
               key={banner.id}
-              className={`flex items-center gap-3 rounded-2xl border ${
+              className={`rounded-2xl border ${
                 banner.active
                   ? "border-zinc-200 bg-white"
                   : "border-zinc-100 bg-zinc-50 opacity-60"
-              } p-4 shadow-sm transition`}
+              } p-3 shadow-sm transition sm:p-4`}
             >
-              {/* Indicador de color */}
-              <span
-                className={`h-8 w-1.5 rounded-full shrink-0 ${colorInfo(banner.color).preview}`}
-              />
+              {/* Fila principal: color + texto + badge */}
+              <div className="flex items-center gap-3">
+                <span
+                  className={`h-8 w-1.5 shrink-0 rounded-full ${colorInfo(banner.color).preview}`}
+                />
+                <span className="flex-1 text-sm font-medium leading-snug text-zinc-700">
+                  {banner.text}
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    banner.active
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-zinc-100 text-zinc-400"
+                  }`}
+                >
+                  {banner.active ? "Activo" : "Inactivo"}
+                </span>
+              </div>
 
-              {/* Texto */}
-              <span className="flex-1 truncate text-sm font-medium text-zinc-700">
-                {banner.text}
-              </span>
-
-              {/* Estado activo/inactivo */}
-              <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  banner.active
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-zinc-100 text-zinc-400"
-                }`}
-              >
-                {banner.active ? "Activo" : "Inactivo"}
-              </span>
-
-              {/* Acciones */}
-              <div className="flex shrink-0 items-center gap-1">
-                {/* Toggle */}
+              {/* Fila de acciones — separada para mayor área táctil en móvil */}
+              <div className="mt-2.5 flex items-center gap-1 border-t border-zinc-100 pt-2.5">
                 <button
                   onClick={() => toggleActive(banner)}
                   disabled={togglingId === banner.id}
-                  title={banner.active ? "Desactivar" : "Activar"}
-                  className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 disabled:opacity-40"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium text-zinc-500 hover:bg-zinc-100 disabled:opacity-40"
                 >
                   {banner.active ? (
-                    <EyeOff className="h-4 w-4" />
+                    <><EyeOff className="h-3.5 w-3.5" /> Desactivar</>
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <><Eye className="h-3.5 w-3.5" /> Activar</>
                   )}
                 </button>
-
-                {/* Editar */}
+                <div className="h-4 w-px bg-zinc-200" />
                 <button
                   onClick={() => startEdit(banner)}
-                  title="Editar"
-                  className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium text-zinc-500 hover:bg-zinc-100"
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className="h-3.5 w-3.5" /> Editar
                 </button>
-
-                {/* Eliminar */}
+                <div className="h-4 w-px bg-zinc-200" />
                 <button
                   onClick={() => setDeleteTarget(banner)}
-                  title="Eliminar"
-                  className="rounded-lg p-1.5 text-zinc-400 hover:bg-rose-50 hover:text-rose-500"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium text-rose-400 hover:bg-rose-50"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" /> Eliminar
                 </button>
               </div>
             </div>
