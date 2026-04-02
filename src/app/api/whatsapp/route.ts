@@ -90,22 +90,30 @@ export async function POST(request: Request) {
   }
 
   const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
+
+  // Fecha: yyyy-mm-dd → dd/mm/yyyy
+  const [y, mo, d] = body.orderDate.split("-");
+  const fechaFormateada = `${d}/${mo}/${y}`;
+
   const lines = body.items
-    .map((item) => `- ${item.name} x${item.quantity} (${mxn.format(item.price)} c/u)`)
+    .map((item) => `  • ${item.name} × ${item.quantity}  →  ${mxn.format(item.price * item.quantity)}`)
     .join("\n");
 
   const message = [
-    "Nuevo pedido Dulceria",
-    `Cliente: ${body.customerName}`,
-    `Direccion: ${body.address}`,
-    `Pago: ${body.paymentType}`,
-    `Entrega: ${body.delivery ? "Domicilio" : "Recoger en tienda"}`,
-    `Fecha: ${body.orderDate}`,
-    orderId ? `Folio: ${orderId}` : "Folio: pendiente",
-    "Productos:",
+    "🍬 *NUEVO PEDIDO — Dulcería Artesanal*",
+    "─────────────────────────────",
+    `👤 *Cliente:*  ${body.customerName}`,
+    `📅 *Fecha de entrega:*  ${fechaFormateada}`,
+    `${body.delivery ? "🛵 *Entrega:*  Domicilio" : "🏪 *Entrega:*  Recoger en tienda"}`,
+    `📍 *Dirección:*  ${body.address}`,
+    `💳 *Pago:*  ${body.paymentType === "efectivo" ? "Efectivo" : "Transferencia"}`,
+    "─────────────────────────────",
+    "🛒 *Productos:*",
     lines,
-    `Total: ${mxn.format(body.total)}`,
-  ].join("\n");
+    "─────────────────────────────",
+    `💰 *Total:*  ${mxn.format(body.total)}`,
+    orderId ? `🔖 *Folio:*  #${orderId.slice(0, 8).toUpperCase()}` : "",
+  ].filter(Boolean).join("\n");
 
   const waUrl = `https://wa.me/${OWNER_PHONE}?text=${encodeURIComponent(message)}`;
   return NextResponse.json({ waUrl, orderId });
