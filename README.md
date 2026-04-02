@@ -1,6 +1,6 @@
 # 🍬 Dulcería Artesanal
 
-Tienda online de dulces artesanales construida con **Next.js 15 App Router**, **Supabase**, **Tailwind CSS v4** y **Framer Motion**. Diseñada mobile-first con un flujo completo de catálogo → carrito → checkout → confirmación por WhatsApp, más un panel de administración protegido.
+Tienda online de dulces artesanales construida con **Next.js 16 App Router**, **Supabase**, **Tailwind CSS** y **Framer Motion**. Diseñada mobile-first con un flujo completo de catálogo → carrito → checkout → confirmación por WhatsApp, más un panel de administración protegido.
 
 ## ✨ Características
 
