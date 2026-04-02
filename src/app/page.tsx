@@ -25,10 +25,9 @@ const BUSINESS = {
   ],
   rules: [
     "Realiza tu pedido con mínimo 24 h de anticipación",
-    "Pedido mínimo de $100 MXN",
     "Envío a domicilio disponible (costo adicional)",
     "Pago en efectivo o transferencia bancaria",
-    "Se solicita 50% de anticipo en pedidos mayores a $300",
+    "Se solicita 50% de anticipo en pedidos mayores a $10000",
     "Sin devoluciones en productos personalizados",
   ],
 };

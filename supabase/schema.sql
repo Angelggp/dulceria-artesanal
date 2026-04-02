@@ -76,3 +76,20 @@ insert into public.products (id, name, category, price, image, description, stoc
 ('ench-01', 'Enchilados de Tamarindo', 'enchilados', 70, 'https://images.unsplash.com/photo-1633933358116-a27b902fad35', 'Mezcla picosita de tamarindo, mango y chamoy.', 16),
 ('reg-01', 'Canasta Dulce Regalo', 'regalos', 320, 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48', 'Canasta para regalo con seleccion premium de dulces.', 5)
 on conflict (id) do nothing;
+
+-- Tabla de banners / ticker promocional
+create table if not exists public.banners (
+  id         uuid primary key default gen_random_uuid(),
+  text       text not null,
+  active     boolean not null default true,
+  color      text not null default 'amber',
+  created_at timestamptz not null default now()
+);
+
+alter table public.banners enable row level security;
+
+drop policy if exists "Public can read active banners" on public.banners;
+create policy "Public can read active banners"
+  on public.banners for select
+  to anon, authenticated
+  using (active = true);

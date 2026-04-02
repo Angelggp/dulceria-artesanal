@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
+  Megaphone,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { href: "/admin/pedidos",    label: "Pedidos",    Icon: ShoppingBag },
   { href: "/admin/productos",  label: "Productos",  Icon: LayoutGrid },
   { href: "/admin/categorias", label: "Categorías", Icon: Tag },
+  { href: "/admin/anuncios",   label: "Anuncios",   Icon: Megaphone },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

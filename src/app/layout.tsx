@@ -4,6 +4,7 @@ import "./globals.css";
 import ConditionalHeader from "@/components/conditional-header";
 import ConditionalMain from "@/components/conditional-main";
 import ConditionalFooter from "@/components/conditional-footer";
+import ConditionalTicker from "@/components/conditional-ticker";
 import BottomNav from "@/components/bottom-nav";
 import ToastProvider from "@/components/toast-provider";
 
@@ -35,6 +36,7 @@ export default function RootLayout({
       <body className="min-h-full bg-amber-50 text-zinc-800">
         <ConditionalHeader />
         <ConditionalMain>{children}</ConditionalMain>
+        <ConditionalTicker />
         <ConditionalFooter />
         <BottomNav />
         <ToastProvider />

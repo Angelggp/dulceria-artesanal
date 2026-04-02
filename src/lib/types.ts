@@ -34,3 +34,11 @@ export type CheckoutForm = {
   delivery: boolean;
   orderDate: string;
 };
+
+export type Banner = {
+  id: string;
+  text: string;
+  active: boolean;
+  color: string;
+  created_at?: string;
+};
