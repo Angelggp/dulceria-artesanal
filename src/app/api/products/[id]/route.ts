@@ -49,11 +49,35 @@ export async function DELETE(
     return NextResponse.json({ error: "Supabase no configurado." }, { status: 500 });
   }
 
+  const headers = {
+    apikey: SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+  };
+
+  // Verificar si el producto tiene pedidos asociados en order_items
+  const checkRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/order_items?product_id=eq.${id}&select=id&limit=1`,
+    { headers, cache: "no-store" },
+  );
+
+  if (checkRes.ok) {
+    const rows = (await checkRes.json()) as unknown[];
+    if (rows.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Este producto tiene pedidos asociados y no puede eliminarse. Para quitarlo del catálogo, desactiva su stock poniéndolo en 0.",
+          blocked: true,
+        },
+        { status: 409 },
+      );
+    }
+  }
+
   const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
     method: "DELETE",
     headers: {
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      ...headers,
       Prefer: "return=minimal",
     },
   });

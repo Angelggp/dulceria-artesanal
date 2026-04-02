@@ -139,6 +139,7 @@ export default function ProductosPage() {
   const [error, setError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -235,12 +236,16 @@ export default function ProductosPage() {
   async function confirmDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
+    setDeleteError("");
     const res = await fetch(`/api/products/${deleteTarget.id}`, { method: "DELETE" });
     if (res.ok) {
       setProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));
       if (editingId === deleteTarget.id) cancelForm();
+      setDeleteTarget(null);
+    } else {
+      const data = (await res.json()) as { error?: string };
+      setDeleteError(data.error ?? "No se pudo eliminar el producto.");
     }
-    setDeleteTarget(null);
     setDeleting(false);
   }
 
@@ -522,16 +527,22 @@ export default function ProductosPage() {
               <span className="font-semibold text-zinc-900">{deleteTarget.name}</span>?{" "}
               Esta acción no se puede deshacer.
             </p>
+            {deleteError && (
+              <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+                <span className="mt-0.5 shrink-0 text-amber-500">⚠️</span>
+                <p className="text-sm text-amber-800">{deleteError}</p>
+              </div>
+            )}
             <div className="mt-5 flex justify-end gap-3">
               <button
-                onClick={() => setDeleteTarget(null)}
+                onClick={() => { setDeleteTarget(null); setDeleteError(""); }}
                 className="rounded-xl border border-zinc-200 px-4 py-2 text-sm text-zinc-600 transition hover:bg-zinc-50"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
-                disabled={deleting}
+                disabled={deleting || !!deleteError}
                 className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-60"
               >
                 <Trash2 size={14} />

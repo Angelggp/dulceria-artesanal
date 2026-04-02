@@ -61,15 +61,36 @@ export async function DELETE(
     return NextResponse.json({ error: "Supabase no configurado." }, { status: 500 });
   }
 
+  const headers = {
+    apikey: SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+  };
+
+  // Verificar si hay productos asignados a esta categoría
+  const checkRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/products?category=eq.${encodeURIComponent(id)}&select=id&limit=1`,
+    { headers, cache: "no-store" },
+  );
+
+  if (checkRes.ok) {
+    const rows = (await checkRes.json()) as unknown[];
+    if (rows.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Esta categoría tiene productos asignados. Reasígnalos o elimínalos antes de borrar la categoría.",
+          blocked: true,
+        },
+        { status: 409 },
+      );
+    }
+  }
+
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/categories?id=eq.${encodeURIComponent(id)}`,
     {
       method: "DELETE",
-      headers: {
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        Prefer: "return=minimal",
-      },
+      headers: { ...headers, Prefer: "return=minimal" },
     },
   );
 
@@ -78,4 +99,5 @@ export async function DELETE(
   }
 
   return NextResponse.json({ ok: true });
+}
 }

@@ -29,6 +29,7 @@ export default function CategoriasPage() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/categories")
@@ -113,13 +114,17 @@ export default function CategoriasPage() {
   async function confirmDelete() {
     if (!deleteTarget) return;
     setDeletingId(deleteTarget.id);
+    setDeleteError("");
     const res = await fetch(`/api/admin/categories/${deleteTarget.id}`, { method: "DELETE" });
     if (res.ok) {
       setCategories((prev) => prev.filter((c) => c.id !== deleteTarget.id));
       if (editingId === deleteTarget.id) cancelForm();
+      setDeleteTarget(null);
+    } else {
+      const data = (await res.json()) as { error?: string };
+      setDeleteError(data.error ?? "No se pudo eliminar la categoría.");
     }
     setDeletingId(null);
-    setDeleteTarget(null);
   }
 
   const inputCls =
@@ -306,16 +311,22 @@ export default function CategoriasPage() {
               </span>
               ? Los productos de esta categoría quedarán sin categoría válida.
             </p>
+            {deleteError && (
+              <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+                <span className="mt-0.5 shrink-0 text-amber-500">⚠️</span>
+                <p className="text-sm text-amber-800">{deleteError}</p>
+              </div>
+            )}
             <div className="mt-5 flex gap-2">
               <button
-                onClick={() => setDeleteTarget(null)}
+                onClick={() => { setDeleteTarget(null); setDeleteError(""); }}
                 className="flex-1 rounded-xl border border-zinc-200 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
-                disabled={!!deletingId}
+                disabled={!!deletingId || !!deleteError}
                 className="flex-1 rounded-xl bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
               >
                 {deletingId ? "Eliminando..." : "Eliminar"}
