@@ -1,9 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, MapPin, Calendar, CreditCard, Truck, ArrowLeft, Lock, ChevronRight, ShoppingBag } from "lucide-react";
+import { User, MapPin, Calendar, CreditCard, Truck, ArrowLeft, Lock, ChevronRight, ShoppingBag, Phone, Clock } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { useCartStore } from "@/store/cart-store";
 
@@ -15,6 +15,82 @@ const fadeUp = {
   }),
 };
 
+// Horario del negocio (0 = Domingo, 1 = Lunes ... 6 = Sábado)
+const SCHEDULE: Record<number, { open: string; close: string } | null> = {
+  0: { open: "08:00", close: "19:00" }, // Domingo
+  1: { open: "08:00", close: "19:00" }, // Lunes
+  2: { open: "08:00", close: "19:00" }, // Martes
+  3: { open: "08:00", close: "19:00" }, // Miércoles
+  4: { open: "08:00", close: "19:00" }, // Jueves
+  5: { open: "08:00", close: "19:00" }, // Viernes
+  6: null,                               // Sábado: cerrado
+};
+const DAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+function fmtTime(hhmm: string) {
+  const [h, m] = hhmm.split(":").map(Number);
+  const p = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${p}`;
+}
+
+function validateDate(dateStr: string): string {
+  if (!dateStr) return "";
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const selected = new Date(y, mo - 1, d);
+  // Verificar que sea una fecha real (ej. 30/02 es inválido)
+  if (
+    selected.getFullYear() !== y ||
+    selected.getMonth() !== mo - 1 ||
+    selected.getDate() !== d
+  ) return "Fecha inválida. Verifica día y mes.";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (selected <= today)
+    return "La fecha debe ser al menos con 24 h de anticipación.";
+  const dow = selected.getDay();
+  if (!SCHEDULE[dow])
+    return `Los ${DAY_NAMES[dow]} estamos cerrados. Por favor elige otro día.`;
+  return "";
+}
+
+function validateTime(timeStr: string, dateStr: string): string {
+  if (!timeStr || !dateStr) return "";
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const dow = new Date(y, mo - 1, d).getDay();
+  const sched = SCHEDULE[dow];
+  if (!sched) return "";
+  const [th, tm] = timeStr.split(":").map(Number);
+  const [oh, om] = sched.open.split(":").map(Number);
+  const [ch, cm] = sched.close.split(":").map(Number);
+  if (th * 60 + tm < oh * 60 + om || th * 60 + tm >= ch * 60 + cm)
+    return `El horario ese día es de ${fmtTime(sched.open)} a ${fmtTime(sched.close)}.`;
+  return "";
+}
+
+const FORM_KEY = "dulceria_checkout_draft";
+
+type FormDraft = {
+  customerName: string;
+  phone: string;
+  address: string;
+  paymentType: string;
+  delivery: boolean;
+  orderDate: string;
+  orderTime: string;
+};
+
+function loadDraft(): Partial<FormDraft> {
+  try {
+    const raw = sessionStorage.getItem(FORM_KEY);
+    return raw ? (JSON.parse(raw) as FormDraft) : {};
+  } catch { return {}; }
+}
+
+function saveDraft(d: Partial<FormDraft>) {
+  try { sessionStorage.setItem(FORM_KEY, JSON.stringify(d)); } catch { /* noop */ }
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
@@ -22,19 +98,80 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [delivery, setDelivery] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [paymentType, setPaymentType] = useState("");
+  const [orderDate, setOrderDate] = useState("");
+  const [orderTime, setOrderTime] = useState("");
+  const [dateError, setDateError] = useState("");
+  const [timeError, setTimeError] = useState("");
+  const [efectivoOnly, setEfectivoOnly] = useState(false);
+
+  // Cargar borrador guardado al montar
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft.customerName) setCustomerName(draft.customerName);
+    if (draft.phone) setPhone(draft.phone);
+    if (draft.address) setAddress(draft.address);
+    if (draft.paymentType) setPaymentType(draft.paymentType);
+    if (draft.delivery !== undefined) setDelivery(draft.delivery);
+    if (draft.orderDate) {
+      setOrderDate(draft.orderDate);
+      setDateError(validateDate(draft.orderDate));
+    }
+    if (draft.orderTime) setOrderTime(draft.orderTime);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d: { settings?: Record<string, string> }) => {
+        if (d.settings?.efectivo_only === "true") {
+          setEfectivoOnly(true);
+          // Forzar efectivo aunque haya un borrador con transferencia
+          setPaymentType("efectivo");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Guardar borrador cada vez que cambia algo
+  useEffect(() => {
+    saveDraft({ customerName, phone, address, paymentType, delivery, orderDate, orderTime });
+  }, [customerName, phone, address, paymentType, delivery, orderDate, orderTime]);
+
+  const schedForDate = orderDate
+    ? (() => {
+        const [y, mo, d] = orderDate.split("-").map(Number);
+        return SCHEDULE[new Date(y, mo - 1, d).getDay()];
+      })()
+    : null;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+
+    const dErr = validateDate(orderDate);
+    const tErr = validateTime(orderTime, orderDate);
+    setDateError(dErr);
+    setTimeError(tErr);
+    if (!orderDate) { setDateError("Por favor selecciona una fecha."); return; }
+    if (!orderTime) { setTimeError("Por favor selecciona una hora."); return; }
+    if (dErr || tErr) return;
+
     setIsLoading(true);
 
-    const formData = new FormData(event.currentTarget);
     const payload = {
-      customerName: String(formData.get("customerName") || ""),
-      address: String(formData.get("address") || ""),
-      paymentType: String(formData.get("paymentType") || ""),
-      delivery: formData.get("delivery") === "on",
-      orderDate: String(formData.get("orderDate") || ""),
+      customerName,
+      phone,
+      address: delivery ? address : "Recoge en tienda",
+      // Si solo se acepta efectivo, ignorar lo que diga el estado
+      paymentType: efectivoOnly ? "efectivo" : paymentType,
+      delivery,
+      orderDate,
+      orderTime,
       items: items.map((item) => ({
         productId: item.product.id,
         name: item.product.name,
@@ -54,6 +191,8 @@ export default function CheckoutPage() {
       if (!response.ok) throw new Error("No se pudo generar mensaje de WhatsApp.");
 
       const data = await response.json();
+      // Limpiar borrador al finalizar el pedido
+      try { sessionStorage.removeItem(FORM_KEY); } catch { /* noop */ }
       router.push(`/confirmacion?wa=${encodeURIComponent(data.waUrl)}`);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Error inesperado.");
@@ -112,40 +251,106 @@ export default function CheckoutPage() {
               name="customerName"
               required
               placeholder="María García"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              className={inputCls}
+            />
+          </motion.div>
+
+          {/* Teléfono */}
+          <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show" className="space-y-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              <Phone size={12} /> Teléfono de contacto
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              required
+              placeholder="Ej. 55123456"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+              inputMode="numeric"
               className={inputCls}
             />
           </motion.div>
 
           {/* Fecha */}
-          <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show" className="space-y-1.5">
+          <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="space-y-1.5">
             <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">
               <Calendar size={12} /> Fecha del pedido
             </label>
             <input
               type="date"
-              name="orderDate"
+              value={orderDate}
+              onChange={(e) => {
+                const val = e.target.value;
+                setOrderDate(val);
+                const dErr = validateDate(val);
+                setDateError(dErr);
+                if (orderTime) setTimeError(validateTime(orderTime, val));
+              }}
               required
               className={inputCls}
             />
+            {dateError && (
+              <p className="text-xs font-medium text-red-600">⚠️ {dateError}</p>
+            )}
+          </motion.div>
+
+          {/* Hora de entrega */}
+          <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show" className="space-y-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              <Clock size={12} /> Hora de entrega
+              {schedForDate && (
+                <span className="ml-1 font-normal normal-case text-zinc-400">
+                  ({fmtTime(schedForDate.open)} – {fmtTime(schedForDate.close)})
+                </span>
+              )}
+            </label>
+            <input
+              type="time"
+              min={schedForDate?.open}
+              max={schedForDate?.close}
+              value={orderTime}
+              onChange={(e) => {
+                const val = e.target.value;
+                setOrderTime(val);
+                setTimeError(validateTime(val, orderDate));
+              }}
+              required
+              disabled={!orderDate || !!dateError}
+              className={`${inputCls}${!orderDate || !!dateError ? " cursor-not-allowed opacity-50" : ""}`}
+            />
+            {!orderDate && (
+              <p className="text-xs text-zinc-400">Selecciona primero una fecha.</p>
+            )}
+            {timeError && (
+              <p className="text-xs font-medium text-red-600">⚠️ {timeError}</p>
+            )}
           </motion.div>
 
           {/* Pago */}
-          <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="space-y-1.5">
+          <motion.div custom={5} variants={fadeUp} initial="hidden" animate="show" className="space-y-1.5">
             <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">
               <CreditCard size={12} /> Método de pago
             </label>
-            <select name="paymentType" required className={inputCls}>
-              <option value="">Selecciona...</option>
+            <select name="paymentType" required value={paymentType} onChange={(e) => setPaymentType(e.target.value)} className={inputCls}>
+              {!efectivoOnly && !paymentType && <option value="">Selecciona...</option>}
               <option value="efectivo">💵 Efectivo</option>
-              <option value="transferencia">🏦 Transferencia bancaria</option>
+              <option value="transferencia" disabled={efectivoOnly}>🏦 Transferencia bancaria</option>
             </select>
+            {efectivoOnly && (
+              <p className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                ℹ️ Por el momento solo aceptamos efectivo.
+              </p>
+            )}
           </motion.div>
 
           {/* Entrega a domicilio toggle */}
-          <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show">
+          <motion.div custom={6} variants={fadeUp} initial="hidden" animate="show">
             <button
               type="button"
-              onClick={() => setDelivery((v) => !v)}
+              onClick={() => { setDelivery((v) => !v); }}
               className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition ${
                 delivery
                   ? "border-amber-400 bg-amber-50 text-amber-800"
@@ -186,12 +391,11 @@ export default function CheckoutPage() {
                   name="address"
                   required={delivery}
                   placeholder="Calle, número, colonia..."
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
                   className={inputCls}
                 />
               </motion.div>
-            )}
-            {!delivery && (
-              <input type="hidden" name="address" value="Recoge en tienda" />
             )}
           </AnimatePresence>
 
@@ -211,7 +415,7 @@ export default function CheckoutPage() {
 
           {/* Submit */}
           <motion.button
-            custom={5}
+            custom={7}
             variants={fadeUp}
             initial="hidden"
             animate="show"

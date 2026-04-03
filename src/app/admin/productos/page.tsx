@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatCurrency } from "@/lib/format";
 import { Category, Product } from "@/lib/types";
-import { ChevronLeft, ChevronRight, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, EyeOff, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 
 const PAGE_SIZE = 8;
 
@@ -140,11 +140,12 @@ export default function ProductosPage() {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [togglingVisible, setTogglingVisible] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/products").then((r) => r.json()),
+      fetch("/api/admin/products").then((r) => r.json()),
       fetch("/api/admin/categories").then((r) => r.json()),
     ]).then(([prodData, catData]) => {
       setProducts((prodData as { products?: Product[] }).products ?? []);
@@ -231,6 +232,21 @@ export default function ProductosPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function toggleVisible(product: Product) {
+    setTogglingVisible(product.id);
+    const res = await fetch(`/api/products/${product.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visible: !product.visible }),
+    });
+    if (res.ok) {
+      setProducts((prev) =>
+        prev.map((p) => p.id === product.id ? { ...p, visible: !product.visible } : p),
+      );
+    }
+    setTogglingVisible(null);
   }
 
   async function confirmDelete() {
@@ -453,9 +469,24 @@ export default function ProductosPage() {
                 }`}
               >
                 {product.stock === 0 ? "Agotado" : `${product.stock} en stock`}
-              </span>
-            </div>
+              </span>              {!product.visible && (
+                <span className="ml-1 mt-1 inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                  Oculto
+                </span>
+              )}            </div>
             <div className="flex shrink-0 flex-col gap-2">
+              <button
+                onClick={() => toggleVisible(product)}
+                disabled={togglingVisible === product.id}
+                className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
+                  product.visible
+                    ? "border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                    : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                } disabled:opacity-60`}
+              >
+                {product.visible ? <Eye size={12} /> : <EyeOff size={12} />}
+                {product.visible ? "Visible" : "Oculto"}
+              </button>
               <button
                 onClick={() => startEdit(product)}
                 className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 transition hover:bg-zinc-50"

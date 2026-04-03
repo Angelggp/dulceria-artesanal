@@ -12,6 +12,8 @@ import {
   ShoppingBag,
   Store,
   Truck,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 
 type OrderItem = {
@@ -141,6 +143,8 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [reminderDays, setReminderDays] = useState(1);
+  const [efectivoOnly, setEfectivoOnly] = useState(false);
+  const [togglingPayment, setTogglingPayment] = useState(false);
 
   useEffect(() => {
     try {
@@ -155,6 +159,13 @@ export default function DashboardPage() {
       .then((r) => r.json())
       .then((d: { orders?: Order[] }) => setOrders(d.orders ?? []))
       .finally(() => setLoading(false));
+
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((d: { settings?: Record<string, string> }) => {
+        setEfectivoOnly(d.settings?.efectivo_only === "true");
+      })
+      .catch(() => {});
   }, []);
 
   const active = orders.filter((o) => !o.archived);
@@ -345,6 +356,45 @@ export default function DashboardPage() {
               );
             })
           )}
+        </div>
+      </div>
+
+      {/* ── Configuración rápida ── */}
+      <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-3 font-semibold text-zinc-800">Configuración</h2>
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-zinc-700">Solo efectivo</p>
+            <p className="text-xs text-zinc-400">
+              {efectivoOnly
+                ? "Activo — transferencia deshabilitada en el checkout."
+                : "Desactivado — se aceptan efectivo y transferencia."}
+            </p>
+          </div>
+          <button
+            onClick={async () => {
+              setTogglingPayment(true);
+              const next = !efectivoOnly;
+              await fetch("/api/admin/settings", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ key: "efectivo_only", value: next ? "true" : "false" }),
+              });
+              setEfectivoOnly(next);
+              setTogglingPayment(false);
+            }}
+            disabled={togglingPayment}
+            className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+              efectivoOnly
+                ? "border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100"
+            } disabled:opacity-60`}
+          >
+            {efectivoOnly
+              ? <ToggleRight size={18} className="text-amber-600" />
+              : <ToggleLeft size={18} className="text-zinc-400" />}
+            {efectivoOnly ? "Activo" : "Inactivo"}
+          </button>
         </div>
       </div>
     </section>

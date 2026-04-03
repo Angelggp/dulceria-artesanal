@@ -105,3 +105,4 @@ src/
 La ruta `/admin/*` está protegida por middleware que verifica el JWT de Supabase Auth almacenado en una cookie `httpOnly`. El login usa `POST /auth/v1/token?grant_type=password` de Supabase.
 
 # dulceria-artesanal
+

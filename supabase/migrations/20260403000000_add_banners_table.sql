@@ -10,10 +10,12 @@ create table if not exists public.banners (
 -- RLS: only service role can write; anon can read active banners
 alter table public.banners enable row level security;
 
+drop policy if exists "Public can read active banners" on public.banners;
 create policy "Public can read active banners"
   on public.banners for select
   using (active = true);
 
+drop policy if exists "Service role full access" on public.banners;
 create policy "Service role full access"
   on public.banners for all
   using (auth.role() = 'service_role');

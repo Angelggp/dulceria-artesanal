@@ -15,13 +15,13 @@ const BUSINESS = {
   groupUrl: "https://chat.whatsapp.com/HL48Am49EnP3EyxMGvBhmE",
   instagramUrl: "",               // opcional
   schedule: [
-    { day: "Lunes",     open: "9:00",  close: "20:00", active: true },
-    { day: "Martes",    open: "9:00",  close: "20:00", active: true },
-    { day: "Miércoles", open: "9:00",  close: "20:00", active: true },
-    { day: "Jueves",    open: "9:00",  close: "20:00", active: true },
-    { day: "Viernes",   open: "9:00",  close: "21:00", active: true },
-    { day: "Sábado",    open: "10:00", close: "21:00", active: true },
-    { day: "Domingo",   open: "",      close: "",      active: false },
+    { day: "Lunes",     open: "8:00",  close: "19:00", active: true },
+    { day: "Martes",    open: "8:00",  close: "19:00", active: true },
+    { day: "Miércoles", open: "8:00",  close: "19:00", active: true },
+    { day: "Jueves",    open: "8:00",  close: "19:00", active: true },
+    { day: "Viernes",   open: "8:00",  close: "19:00", active: true },
+    { day: "Sábado",    open: "",      close: "",      active: false },
+    { day: "Domingo",   open: "8:00",  close: "19:00", active: true },
   ],
   rules: [
     "Realiza tu pedido con mínimo 24 h de anticipación",

@@ -31,16 +31,19 @@ create table if not exists public.products (
   price       numeric(10, 2) not null check (price >= 0),
   image       text not null,
   description text not null,
-  stock       integer not null default 0 check (stock >= 0)
+  stock       integer not null default 0 check (stock >= 0),
+  visible     boolean not null default true
 );
 
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
   customer_name text not null,
+  phone text not null default '',
   address text not null,
   payment_type text not null,
   delivery boolean not null default false,
   order_date date not null,
+  order_time text not null default '',
   status text not null default 'pendiente',
   total numeric(10, 2) not null check (total >= 0),
   created_at timestamptz not null default now(),
@@ -93,3 +96,21 @@ create policy "Public can read active banners"
   on public.banners for select
   to anon, authenticated
   using (active = true);
+
+-- Tabla de configuración clave-valor
+create table if not exists public.settings (
+  key   text primary key,
+  value text not null default ''
+);
+
+alter table public.settings enable row level security;
+
+drop policy if exists "Public can read settings" on public.settings;
+create policy "Public can read settings"
+  on public.settings for select
+  to anon, authenticated
+  using (true);
+
+insert into public.settings (key, value)
+values ('efectivo_only', 'true')
+on conflict (key) do nothing;

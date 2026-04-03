@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 
 type CheckoutPayload = {
   customerName: string;
+  phone: string;
   address: string;
   paymentType: string;
   delivery: boolean;
   orderDate: string;
+  orderTime: string;
   items: Array<{
     productId: string;
     name: string;
@@ -39,10 +41,12 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         customer_name: body.customerName,
+        phone: body.phone,
         address: body.address,
         payment_type: body.paymentType,
         delivery: body.delivery,
         order_date: body.orderDate,
+        order_time: body.orderTime,
         status: "pendiente",
         total: body.total,
       }),
@@ -103,7 +107,9 @@ export async function POST(request: Request) {
     "🍬 *NUEVO PEDIDO — Dulcería Artesanal*",
     "─────────────────────────────",
     `👤 *Cliente:*  ${body.customerName}`,
+    `� *Teléfono:*  ${body.phone}`,
     `📅 *Fecha de entrega:*  ${fechaFormateada}`,
+    `🕐 *Hora de entrega:*  ${body.orderTime}`,
     `${body.delivery ? "🛵 *Entrega:*  Domicilio" : "🏪 *Entrega:*  Recoger en tienda"}`,
     `📍 *Dirección:*  ${body.address}`,
     `💳 *Pago:*  ${body.paymentType === "efectivo" ? "Efectivo" : "Transferencia"}`,

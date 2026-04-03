@@ -20,6 +20,7 @@ export type Product = {
   image: string;
   description: string;
   stock: number;
+  visible: boolean;
 };
 
 export type CartItem = {
@@ -29,10 +30,12 @@ export type CartItem = {
 
 export type CheckoutForm = {
   customerName: string;
+  phone: string;
   address: string;
   paymentType: "efectivo" | "transferencia";
   delivery: boolean;
   orderDate: string;
+  orderTime: string;
 };
 
 export type Banner = {

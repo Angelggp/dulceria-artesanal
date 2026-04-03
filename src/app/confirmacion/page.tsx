@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -13,8 +13,12 @@ function ConfirmacionContent() {
   const router = useRouter();
   const clearCart = useCartStore((state) => state.clearCart);
 
-  function handleClearCart() {
+  // Vaciar el carrito automáticamente al llegar a la confirmación
+  useEffect(() => {
     clearCart();
+  }, [clearCart]);
+
+  function handleGoHome() {
     router.push("/");
   }
 
@@ -66,7 +70,7 @@ function ConfirmacionContent() {
             Enviar por WhatsApp
           </a>
           <button
-            onClick={handleClearCart}
+            onClick={handleGoHome}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 py-3 text-sm font-medium text-zinc-600 transition hover:bg-zinc-50"
           >
             <ArrowLeft size={15} />

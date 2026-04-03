@@ -34,6 +34,11 @@ export default function Footer() {
                   Carrito
                 </Link>
               </li>
+              <li>
+                <Link href="/admin/login" className="text-zinc-700 hover:text-amber-800">
+                  Administrar
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -2,12 +2,14 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, LogIn } from "lucide-react";
+import { motion } from "framer-motion";
+import { Lock, Mail, LogIn, Eye, EyeOff } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -81,13 +83,22 @@ export default function AdminLoginPage() {
               <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 required
                 autoComplete="current-password"
-                placeholder="••••••••"
-                className="w-full rounded-lg border border-zinc-200 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                placeholder="***********"
+                className="w-full rounded-lg border border-zinc-200 py-2.5 pl-9 pr-10 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                tabIndex={-1}
+                aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+              >
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
             </div>
           </div>
 
@@ -99,8 +110,18 @@ export default function AdminLoginPage() {
             disabled={loading}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-700 py-2.5 font-medium text-amber-50 transition hover:bg-amber-800 disabled:opacity-60"
           >
-            <LogIn size={15} />
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? (
+              <motion.span
+                animate={{ rotate: 360 }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                className="inline-block h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
+              />
+            ) : (
+              <>
+                <LogIn size={15} />
+                Entrar
+              </>
+            )}
           </button>
         </form>
       </div>

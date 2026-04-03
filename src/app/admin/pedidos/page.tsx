@@ -9,6 +9,7 @@ import {
   BellOff,
   CreditCard,
   RefreshCw,
+  Search,
   Store,
   Truck,
   X,
@@ -28,10 +29,12 @@ type OrderItem = {
 type Order = {
   id: string;
   customer_name: string;
+  phone: string;
   address: string;
   payment_type: string;
   delivery: boolean;
   order_date: string;
+  order_time: string;
   status: OrderStatus;
   total: number;
   created_at: string;
@@ -187,6 +190,7 @@ export default function PedidosPage() {
   const [tab, setTab] = useState<"activos" | "archivados">("activos");
   const [filterStatus, setFilterStatus] = useState<OrderStatus | "todos">("todos");
   const [filterDate, setFilterDate] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showReminder, setShowReminder] = useState(false);
   const [reminder, setReminder] = useState<ReminderConfig>(DEFAULT_REMINDER);
   const lastNotifiedRef = useRef("");
@@ -291,6 +295,15 @@ export default function PedidosPage() {
   const filtered = source.filter((o) => {
     if (tab === "activos" && filterStatus !== "todos" && o.status !== filterStatus) return false;
     if (filterDate && o.order_date !== filterDate) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const matchName = o.customer_name.toLowerCase().includes(q);
+      const matchFolio = o.id.toLowerCase().startsWith(q);
+      const matchProduct = o.order_items.some((i) =>
+        (i.products?.name ?? "").toLowerCase().includes(q)
+      );
+      if (!matchName && !matchFolio && !matchProduct) return false;
+    }
     return true;
   });
 
@@ -332,7 +345,7 @@ export default function PedidosPage() {
         {(["activos", "archivados"] as const).map((t) => (
           <button
             key={t}
-            onClick={() => { setTab(t); setFilterStatus("todos"); setFilterDate(""); }}
+            onClick={() => { setTab(t); setFilterStatus("todos"); setFilterDate(""); setSearchQuery(""); }}
             className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
               tab === t
                 ? "border-b-2 border-amber-500 text-amber-700"
@@ -348,44 +361,59 @@ export default function PedidosPage() {
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-2">
-        {tab === "activos" && (
-          <div className="flex flex-wrap gap-1.5">
-            {(["todos", ...STATUSES] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => setFilterStatus(s)}
-                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                  filterStatus === s
-                    ? "border-amber-400 bg-amber-100 text-amber-900"
-                    : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                }`}
-              >
-                {s === "todos" ? "Todos" : STATUS_CONFIG[s].label}
-                {s !== "todos" && (
-                  <span className="ml-1 text-zinc-400">
-                    ({activeOrders.filter((o) => o.status === s).length})
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-        <div className="ml-auto flex items-center gap-1.5">
+      <div className="flex flex-col gap-2">
+        {/* Barra de búsqueda */}
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
           <input
-            type="date"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            className="rounded-lg border border-zinc-200 px-2 py-1.5 text-xs text-zinc-700 outline-none focus:border-amber-400"
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar por cliente, folio o producto..."
+            className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-9 pr-3 text-sm text-zinc-700 outline-none focus:border-amber-400"
           />
-          {filterDate && (
-            <button
-              onClick={() => setFilterDate("")}
-              className="rounded p-1 text-zinc-400 hover:text-zinc-600"
-            >
-              <X size={13} />
-            </button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {tab === "activos" && (
+            <div className="flex flex-wrap gap-1.5">
+              {(["todos", ...STATUSES] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setFilterStatus(s)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                    filterStatus === s
+                      ? "border-amber-400 bg-amber-100 text-amber-900"
+                      : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
+                  }`}
+                >
+                  {s === "todos" ? "Todos" : STATUS_CONFIG[s].label}
+                  {s !== "todos" && (
+                    <span className="ml-1 text-zinc-400">
+                      ({activeOrders.filter((o) => o.status === s).length})
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           )}
+          <div className="ml-auto flex items-center gap-1.5">
+            <span className="whitespace-nowrap text-xs text-zinc-500">Fecha:</span>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="min-w-[130px] rounded-lg border border-zinc-200 px-2 py-1.5 text-xs text-zinc-700 outline-none focus:border-amber-400"
+            />
+            {filterDate && (
+              <button
+                onClick={() => setFilterDate("")}
+                className="rounded p-1 text-zinc-400 hover:text-zinc-600"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -447,6 +475,18 @@ export default function PedidosPage() {
                     </span>
                     <span className="text-zinc-300">·</span>
                     <span>📅 {order.order_date.split("-").reverse().join("/")}</span>
+                    {order.order_time && (
+                      <>
+                        <span className="text-zinc-300">·</span>
+                        <span>🕐 {order.order_time}</span>
+                      </>
+                    )}
+                    {order.phone && (
+                      <>
+                        <span className="text-zinc-300">·</span>
+                        <span>📞 {order.phone}</span>
+                      </>
+                    )}
                   </div>
 
                   <ul className="divide-y divide-zinc-50 rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-1 text-sm">

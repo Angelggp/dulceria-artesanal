@@ -13,7 +13,7 @@ export async function GET() {
 
   try {
     const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/products?select=id,name,category,price,image,description,stock&order=name.asc`,
+      `${SUPABASE_URL}/rest/v1/products?select=id,name,category,price,image,description,stock,visible&visible=eq.true&order=name.asc`,
       {
         headers: {
           apikey: SUPABASE_ANON_KEY,
