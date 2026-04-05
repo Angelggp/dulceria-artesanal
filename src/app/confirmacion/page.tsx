@@ -1,22 +1,47 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle, MessageCircle, ArrowLeft } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 
+const COUNTDOWN_SECONDS = 3;
+
 function ConfirmacionContent() {
   const searchParams = useSearchParams();
   const wa = searchParams.get("wa");
+  const t = searchParams.get("t");
   const router = useRouter();
   const clearCart = useCartStore((state) => state.clearCart);
+  const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
+  const [redirected, setRedirected] = useState(false);
 
   // Vaciar el carrito automáticamente al llegar a la confirmación
   useEffect(() => {
     clearCart();
   }, [clearCart]);
+
+  // Resetear el contador en cada pedido nuevo (wa Y timestamp únicos por pedido)
+  useEffect(() => {
+    setCountdown(COUNTDOWN_SECONDS);
+    setRedirected(false);
+  }, [wa, t]);
+
+  // Cuenta regresiva y redirect automático
+  useEffect(() => {
+    if (!wa || redirected) return;
+
+    if (countdown <= 0) {
+      setRedirected(true);
+      window.location.href = wa;
+      return;
+    }
+
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown, wa, redirected]);
 
   function handleGoHome() {
     router.push("/");
@@ -60,14 +85,42 @@ function ConfirmacionContent() {
           transition={{ delay: 0.35 }}
           className="mt-8 space-y-3"
         >
+          {/* Botón WhatsApp con spinner de cuenta regresiva */}
           <a
             href={wa || "#"}
-            target="_blank"
-            rel="noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md"
+            className="relative flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md"
           >
-            <MessageCircle size={16} />
-            Enviar por WhatsApp
+            {countdown > 0 ? (
+              <>
+                {/* Spinner SVG */}
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
+                </svg>
+                Abriendo WhatsApp en {countdown}…
+              </>
+            ) : (
+              <>
+                <MessageCircle size={16} />
+                Enviar por WhatsApp
+              </>
+            )}
           </a>
           <button
             onClick={handleGoHome}

@@ -193,7 +193,7 @@ export default function CheckoutPage() {
       const data = await response.json();
       // Limpiar borrador al finalizar el pedido
       try { sessionStorage.removeItem(FORM_KEY); } catch { /* noop */ }
-      router.push(`/confirmacion?wa=${encodeURIComponent(data.waUrl)}`);
+      router.push(`/confirmacion?wa=${encodeURIComponent(data.waUrl)}&t=${Date.now()}`);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Error inesperado.");
     } finally {
