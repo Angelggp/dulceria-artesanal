@@ -19,8 +19,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dulceria Artesanal",
-  description: "Tienda de dulces con pedidos por WhatsApp",
+  title: "Dulcería Artesanal - La Cen",
+  description:
+    "Dulcería artesanal, ubicada en Castillo de Jagua, Cienfuegos, Cuba. Elaboramos dulces tradicionales con sabores únicos. Haz tu pedido fácilmente por WhatsApp.",
+  keywords: [
+    "dulcería", "dulces artesanales", "Cienfuegos", "Cuba",
+    "Castillo de Jagua", "Ciudad Nuclear", "Confituras", "dulces",
+    "combos", "regalos", "La Cen",
+  ],
+  authors: [{ name: "Angelggp" }],
+  openGraph: {
+    title: "Dulcería Artesanal — La Cen",
+    description:
+      "Dulcería artesanal, ubicada en Castillo de Jagua, Cienfuegos, Cuba. Elaboramos dulces tradicionales con sabores únicos. Haz tu pedido fácilmente por WhatsApp.",
+    locale: "es_CU",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
